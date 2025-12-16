@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISHNT - PhotoWall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<!-- Animated Background -->
+<div class="animated-bg"></div>
+
+<!-- Header -->
+<header class="glass-header">
+  <div class="header-left">
+    <div class="logo">
+      <span class="logo-icon">📸</span>
+      <span class="logo-text">ISHNT</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn active" data-filter="all">All</button>
+      <button class="nav-btn" data-filter="trending">Trending</button>
+      <button class="nav-btn" data-filter="new">New</button>
+      <button class="nav-btn" data-filter="categories">Categories</button>
+    </nav>
+  </div>
+  <div class="header-right">
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search images..." class="search-input">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div class="header-actions">
+      <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+    </div>
+  </div>
+</header>
+
+<!-- Categories Bar -->
+<div class="categories-bar" id="categoriesBar">
+  <div class="categories-scroll">
+    <button class="category-chip active" data-category="all">All</button>
+    <button class="category-chip" data-category="nature">🌿 Nature</button>
+    <button class="category-chip" data-category="portrait">👤 Portrait</button>
+    <button class="category-chip" data-category="food">🍕 Food</button>
+    <button class="category-chip" data-category="travel">✈️ Travel</button>
+    <button class="category-chip" data-category="art">🎨 Art</button>
+      <button class="category-chip" data-category="anime">🌀 Anime</button>
+      <button class="category-chip" data-category="sports">🏀 Sports</button>
+      <button class="category-chip" data-category="cars">🏎️ Cars</button>
+      <button class="category-chip" data-category="other">🔷 Other</button>
+  </div>
+</div>
+
+<!-- Mobile Grid Selector -->
+<div class="mobile-grid-bar">
+  <span class="grid-label">Grid</span>
+  <div class="grid-buttons">
+    <button class="grid-btn" data-cols="2">2×2</button>
+    <button class="grid-btn" data-cols="3">3×3</button>
+    <button class="grid-btn" data-cols="4">4×4</button>
+    <button class="grid-btn" data-cols="6">4×6</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<main>
+  <div id="gallery" class="masonry-grid"></div>
+</main>
+
+<!-- Floating Upload Button -->
+<button id="addBtn" class="floating-upload-btn">
+  <span class="btn-icon">+</span>
+  <span class="btn-ripple"></span>
+</button>
+<input type="file" id="file" accept="image/*" hidden>
+
+<!-- Upload Modal -->
+<div class="modal" id="uploadModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content glass-card">
+    <div class="modal-header">
+      <h2>Upload Image</h2>
+      <button class="close-btn" onclick="closeUploadModal()">×</button>
+    </div>
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon">📤</div>
+      <p>Drag & drop your image here</p>
+      <p class="upload-hint">or click to browse</p>
+      <input type="file" id="uploadFile" accept="image/*" hidden>
+    </div>
+    <div class="upload-form">
+      <label>Category</label>
+      <select id="uploadCategory" class="form-input">
+        <option value="nature">🌿 Nature</option>
+        <option value="portrait">👤 Portrait</option>
+        <option value="food">🍕 Food</option>
+        <option value="travel">✈️ Travel</option>
+        <option value="art">🎨 Art</option>
+        <option value="anime">🌀 Anime</option>
+        <option value="sports">🏀 Sports</option>
+        <option value="cars">🏎️ Cars</option>
+        <option value="other">🔷 Other</option>
+      </select>
+      <label>Caption (optional)</label>
+      <textarea id="uploadCaption" class="form-input" placeholder="Add a caption..."></textarea>
+      <div class="upload-progress" id="uploadProgress" style="display:none">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-text" id="progressText">0%</span>
+      </div>
+      <button class="btn-primary" onclick="confirmUpload()">Upload</button>
+      <button class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content glass-card">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="close-btn" onclick="closeSettings()">×</button>
+    </div>
+    <div class="settings-content">
+      <div class="setting-item">
+        <label>Username</label>
+        <div class="input-group">
+          <input type="text" id="usernameInput" class="form-input" placeholder="Enter username">
+          <button class="btn-primary" onclick="saveUsername()">Save</button>
+        </div>
+      </div>
+      <div class="setting-item">
+        <label>Theme</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="themeToggle">
+          <label for="themeToggle" class="toggle-label">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Dark Mode</span>
+          </label>
+        </div>
+      </div>
+      <div class="setting-item">
+        <label>Watermark</label>
+        <div class="toggle-switch">
+          <input type="checkbox" id="watermarkToggle">
+          <label for="watermarkToggle" class="toggle-label">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Show watermark on images</span>
+          </label>
+        </div>
+      </div>
+      <div class="setting-item">
+        <label>Terms & Copyright</label>
+        <p class="setting-text">ISHNT™ is a trademarked platform. Unauthorized reuse of branding or content is prohibited. Content ownership belongs to the uploader.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal" id="editModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content glass-card">
+    <div class="modal-header">
+      <h2>Edit Image</h2>
+      <button class="close-btn" onclick="closeEditModal()">×</button>
+    </div>
+    <div class="upload-form">
+      <label>Caption</label>
+      <textarea id="editCaption" class="form-input" placeholder="Add a caption..."></textarea>
+      <label>Category</label>
+      <select id="editCategory" class="form-input">
+        <option value="nature">🌿 Nature</option>
+        <option value="portrait">👤 Portrait</option>
+        <option value="food">🍕 Food</option>
+        <option value="travel">✈️ Travel</option>
+        <option value="art">🎨 Art</option>
+        <option value="anime">🌀 Anime</option>
+        <option value="sports">🏀 Sports</option>
+        <option value="cars">🏎️ Cars</option>
+        <option value="other">🔷 Other</option>
+      </select>
+      <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+      <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image Viewer -->
+<div class="modal" id="viewerModal">
+  <div class="modal-overlay" onclick="closeViewer()"></div>
+  <div class="viewer-content glass-card">
+    <button class="close-btn viewer-close" onclick="closeViewer()">×</button>
+    <div class="viewer-image-container">
+      <img id="viewerImg" class="viewer-image">
+    </div>
+    <div class="viewer-info">
+      <div class="viewer-header">
+        <div class="viewer-user">
+          <div class="user-avatar">👤</div>
+          <div>
+            <div class="viewer-username" id="viewerUser"></div>
+            <div class="viewer-time" id="viewerTime"></div>
+          </div>
+        </div>
+        <div class="viewer-actions-top">
+          <button class="icon-btn like-btn-viewer" id="viewerLikeBtn" onclick="toggleLikeViewer()">
+            <span class="like-icon">🤍</span>
+            <span class="like-count" id="viewerLikeCount">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="viewer-caption" id="viewerCaption"></div>
+      <div class="viewer-meta">
+        <span class="viewer-category" id="viewerCategory"></span>
+      </div>
+      <div class="viewer-actions">
+        <a id="downloadLink" class="btn-primary" download>Download</a>
+        <button id="editViewerBtn" class="btn-secondary" style="display:none" onclick="editFromViewer()">Edit</button>
+        <button id="deleteViewerBtn" class="btn-danger" style="display:none" onclick="deleteFromViewer()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="glass-footer">
+  <div class="footer-content">
+    <p>ISHNT™ – All rights reserved. Content ownership belongs to the uploader.</p>
+    <p>ISHNT™ is a trademarked platform. Unauthorized reuse of branding or content is prohibited.</p>
+    <p>© 2025 ISHNT™ | <a href="#">Terms</a> | <a href="#">Privacy</a></p>
+    <div class="social-icons">
+      <a href="#" class="social-icon">📘</a>
+      <a href="#" class="social-icon">📷</a>
+      <a href="#" class="social-icon">🐦</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
